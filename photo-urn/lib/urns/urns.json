@@ -1,0 +1,26 @@
+{
+  "urn_vertical": {
+    "label": "Vertical Urn",
+    "stl": "urn_vertical.stl",
+    "target": {
+      "width_mm": 120,
+      "height_mm": 120,
+      "depth_mm_min": 0.8,
+      "depth_mm_max": 2.5,
+      "surface": "flat",
+      "default_face": "+Y"
+    }
+  },
+  "urn_horizontal": {
+    "label": "Horizontal Urn",
+    "stl": "urn_horizontal.stl",
+    "target": {
+      "width_mm": 120,
+      "height_mm": 86,
+      "depth_mm_min": 0.8,
+      "depth_mm_max": 2.5,
+      "surface": "flat",
+      "default_face": "+Y"
+    }
+  }
+}
