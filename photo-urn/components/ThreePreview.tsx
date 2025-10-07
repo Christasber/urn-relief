@@ -111,25 +111,25 @@ function facePlacement(bbox: THREE.Box3, face: FaceCode) {
   switch (face) {
     case '+X':
       pos.x = bbox.max.x + eps;
-      rot.set(0, -Math.PI / 2, 0);
+      rot.set(0, Math.PI / 2, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '-X':
       pos.x = bbox.min.x - eps;
-      rot.set(0, Math.PI / 2, 0);
+      rot.set(0, -Math.PI / 2, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '+Y':
       pos.y = bbox.max.y + eps;
-      rot.set(Math.PI / 2, 0, 0);
+      rot.set(-Math.PI / 2, 0, 0);
       targetW = size.x;
       targetH = size.z;
       break;
     case '-Y':
       pos.y = bbox.min.y - eps;
-      rot.set(-Math.PI / 2, 0, 0);
+      rot.set(Math.PI / 2, 0, 0);
       targetW = size.x;
       targetH = size.z;
       break;
@@ -496,6 +496,15 @@ export default function ThreePreview() {
     }, [bbox, urnScale, camera]);
     return null;
   };
+  const ControlUpdater = () => {
+    useFrame(() => {
+      const controls = controlsRef.current;
+      if (controls && typeof controls.update === 'function') {
+        controls.update();
+      }
+    });
+    return null;
+  };
   return (
     <div
       ref={containerRef}
@@ -605,6 +614,7 @@ export default function ThreePreview() {
           enableZoom
           enablePan
         />
+        <ControlUpdater />
       </Canvas>
       {/* Display STL errors if any */}
       {stlError && (
