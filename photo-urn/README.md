@@ -16,6 +16,13 @@ A minimal, working starter for a user-friendly app that:
    ```
 4. Open http://localhost:3000
 
+### Running lint
+
+`npm run lint` executes `next lint` using the shared configuration in
+`.eslintrc.cjs`. If `eslint-config-next` is available locally the config extends
+`next/core-web-vitals`; otherwise it falls back to `eslint:recommended` and
+skips TypeScript sources so the command stays non-interactive in CI.
+
 ## What Works Now
 - 3-step wizard
 - STL urn loading (placeholder shapes)
