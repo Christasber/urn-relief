@@ -93,8 +93,9 @@ function faceSizeFor(bbox: THREE.Box3, face: FaceCode): { u: number; v: number }
 }
 
 /**
- * Compute a position and rotation for a relief plane attached to one
- * face of the bounding box.  The plane’s local +Z points outwards.  The
+ * Compute a position and orientation for a relief plane attached to one
+ * face of the bounding box.  The plane’s local +Z points outwards and
+ * the local +Y stays aligned with the chosen face up-vector.  The
  * returned `targetW` and `targetH` describe the face dimensions before
  * scaling.
  */
@@ -105,50 +106,66 @@ function facePlacement(bbox: THREE.Box3, face: FaceCode) {
   bbox.getCenter(center);
   const eps = 0.0006;
   const pos = center.clone();
-  const rot = new THREE.Euler(0, 0, 0, 'XYZ');
+  const normal = new THREE.Vector3(0, 0, 1);
+  const up = new THREE.Vector3(0, 1, 0);
   let targetW = size.x;
   let targetH = size.y;
   switch (face) {
     case '+X':
       pos.x = bbox.max.x + eps;
-      rot.set(0, -Math.PI / 2, 0);
+      normal.set(1, 0, 0);
+      up.set(0, 1, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '-X':
       pos.x = bbox.min.x - eps;
-      rot.set(0, Math.PI / 2, 0);
+      normal.set(-1, 0, 0);
+      up.set(0, 1, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '+Y':
       pos.y = bbox.max.y + eps;
-      rot.set(Math.PI / 2, 0, 0);
+      normal.set(0, 1, 0);
+      up.set(0, 0, -1);
       targetW = size.x;
       targetH = size.z;
       break;
     case '-Y':
       pos.y = bbox.min.y - eps;
-      rot.set(-Math.PI / 2, 0, 0);
+      normal.set(0, -1, 0);
+      up.set(0, 0, 1);
       targetW = size.x;
       targetH = size.z;
       break;
     case '+Z':
       pos.z = bbox.max.z + eps;
-      rot.set(0, 0, 0);
+      normal.set(0, 0, 1);
+      up.set(0, 1, 0);
       targetW = size.x;
       targetH = size.y;
       break;
     case '-Z':
       pos.z = bbox.min.z - eps;
-      rot.set(Math.PI, 0, 0);
+      normal.set(0, 0, -1);
+      up.set(0, 1, 0);
       targetW = size.x;
       targetH = size.y;
       break;
     default:
       break;
   }
-  return { pos, rot, targetW, targetH };
+  const right = new THREE.Vector3().crossVectors(up, normal);
+  if (right.lengthSq() < 1e-12) {
+    // Fallback in the unlikely event that up and normal are parallel.
+    right.set(1, 0, 0).cross(normal);
+  }
+  right.normalize();
+  up.crossVectors(normal, right).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(right, up, normal);
+  const quat = new THREE.Quaternion().setFromRotationMatrix(matrix);
+  return { pos, quat, targetW, targetH };
 }
 
 /**
@@ -496,6 +513,15 @@ export default function ThreePreview() {
     }, [bbox, urnScale, camera]);
     return null;
   };
+  const ControlUpdater = () => {
+    useFrame(() => {
+      const controls = controlsRef.current;
+      if (controls && typeof controls.update === 'function') {
+        controls.update();
+      }
+    });
+    return null;
+  };
   return (
     <div
       ref={containerRef}
@@ -579,9 +605,9 @@ export default function ThreePreview() {
         <Fitter />
         {/* Relief plane */}
         {urn && imageDataUrl && bbox && (() => {
-          const { pos, rot, targetW, targetH } = facePlacement(bbox, requestedFace);
+          const { pos, quat, targetW, targetH } = facePlacement(bbox, requestedFace);
           return (
-            <group position={[pos.x * urnScale, pos.y * urnScale, pos.z * urnScale]} rotation={rot}>
+            <group position={[pos.x * urnScale, pos.y * urnScale, pos.z * urnScale]} quaternion={quat}>
               <ReliefPlane
                 image={imageDataUrl}
                 params={params}
@@ -605,6 +631,7 @@ export default function ThreePreview() {
           enableZoom
           enablePan
         />
+        <ControlUpdater />
       </Canvas>
       {/* Display STL errors if any */}
       {stlError && (
