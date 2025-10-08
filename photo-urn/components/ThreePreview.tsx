@@ -113,29 +113,25 @@ function facePlacement(bbox: THREE.Box3, face: FaceCode) {
   switch (face) {
     case '+X':
       pos.x = bbox.max.x + eps;
-      normal.set(1, 0, 0);
-      up.set(0, 1, 0);
+      rot.set(0, Math.PI / 2, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '-X':
       pos.x = bbox.min.x - eps;
-      normal.set(-1, 0, 0);
-      up.set(0, 1, 0);
+      rot.set(0, -Math.PI / 2, 0);
       targetW = size.z;
       targetH = size.y;
       break;
     case '+Y':
       pos.y = bbox.max.y + eps;
-      normal.set(0, 1, 0);
-      up.set(0, 0, -1);
+      rot.set(-Math.PI / 2, 0, 0);
       targetW = size.x;
       targetH = size.z;
       break;
     case '-Y':
       pos.y = bbox.min.y - eps;
-      normal.set(0, -1, 0);
-      up.set(0, 0, 1);
+      rot.set(Math.PI / 2, 0, 0);
       targetW = size.x;
       targetH = size.z;
       break;
